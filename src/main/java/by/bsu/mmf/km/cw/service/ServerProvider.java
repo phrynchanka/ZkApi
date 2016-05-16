@@ -9,7 +9,7 @@ public interface ServerProvider {
 
     List<String> getCurrentServerListByVersion(String version);
 
-    List<String> getCurrentServerListByBranchVersion(String branch, String version);
+    List<String> getCurrentServerListByApiVersion(String api, String version);
 
-    List<String> getCurrentServerListByBranchVersionCategory(String branch, String version, String category);
+    List<String> getCurrentServerListByApiVersionRegion(String api, String version, String region);
 }

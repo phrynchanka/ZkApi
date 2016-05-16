@@ -4,6 +4,7 @@ import by.bsu.mmf.km.cw.util.WorkerAction;
 import by.bsu.mmf.km.cw.util.ZKResourceManager;
 import org.apache.zookeeper.AsyncCallback.StringCallback;
 import org.apache.zookeeper.*;
+import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,7 +23,6 @@ public class Worker implements Watcher, WorkerAction {
     private ZooKeeper zk;
     private String host;
     private int sessionTimeout;
-    private String path;
     private boolean connected;
     private boolean expired;
 
@@ -34,13 +34,6 @@ public class Worker implements Watcher, WorkerAction {
         expired = false;
     }
 
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
 
     public ZooKeeper getZk() {
         return zk;
@@ -90,21 +83,40 @@ public class Worker implements Watcher, WorkerAction {
     }
 
     @Override
-    public void register() {
+    public void register(String path, String data) {
         try {
-            zk.create(path, DEFAULT_DATA.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT, createWorkerCallback, null);
+            zk.create(path, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT, createWorkerCallback, null);
             countDownLatch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+    @Override
+    public void updateState(String path, String data) {
+        zk.setData(path, data.getBytes(), -1, updateStatCallback, data);
+    }
+
+    private AsyncCallback.StatCallback updateStatCallback = new AsyncCallback.StatCallback() {
+        @Override
+        public void processResult(int i, String path, Object ctx, Stat stat) {
+            if (KeeperException.Code.get(i).equals(KeeperException.Code.CONNECTIONLOSS)) {
+                updateState(path, (String) ctx);
+            }
+        }
+    };
+
+    @Override
+    public Object getData(String path) {
+        return null;
+    }
+
     private StringCallback createWorkerCallback = new StringCallback() {
         @Override
-        public void processResult(int i, String s, Object o, String s1) {
+        public void processResult(int i, String path, Object ctx, String name) {
             switch (KeeperException.Code.get(i)) {
                 case CONNECTIONLOSS:
-                    register();
+                    register(path, (String) ctx);
                     countDownLatch.countDown();
                     break;
                 case OK:
@@ -116,21 +128,6 @@ public class Worker implements Watcher, WorkerAction {
             }
         }
     };
-
-    @Override
-    public void update(String part, byte[] data) {
-
-    }
-
-    @Override
-    public Object setData(String path, boolean watchFlag) {
-        return null;
-    }
-
-    @Override
-    public Object getData(String path, boolean watchFlag) {
-        return null;
-    }
 
     @Override
     public List<String> getChildren(String path) {
@@ -162,8 +159,7 @@ public class Worker implements Watcher, WorkerAction {
     public static void main(String[] args) {
         Worker worker = new Worker();
         worker.connect();
-        worker.setPath("/api");
-        worker.register();
+        worker.register("/api", "pangramia.com:2181");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
