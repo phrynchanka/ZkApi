@@ -16,7 +16,6 @@ import java.util.concurrent.CountDownLatch;
 public class Worker implements Watcher, WorkerAction {
     private final static String PORT_PARAMETER = "port";
     private final static String SESSION_TIMEOUT_PARAMETER = "sessionTimeout";
-    private final static String DEFAULT_DATA = "Idle";
     private final static int latchQuantity = 1;
     private static ZKResourceManager zkResourceManager = ZKResourceManager.getInstance();
     private CountDownLatch countDownLatch;
@@ -136,7 +135,6 @@ public class Worker implements Watcher, WorkerAction {
 
     @Override
     public void delete(String path) {
-
     }
 
     public void connect() {
@@ -166,6 +164,4 @@ public class Worker implements Watcher, WorkerAction {
             e.printStackTrace();
         }
     }
-
 }
-
