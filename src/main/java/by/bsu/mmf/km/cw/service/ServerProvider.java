@@ -1,5 +1,7 @@
 package by.bsu.mmf.km.cw.service;
 
+import org.apache.zookeeper.KeeperException;
+
 import java.util.List;
 
 /**
@@ -7,9 +9,9 @@ import java.util.List;
  */
 public interface ServerProvider {
 
-    List<String> getCurrentServerListByVersion(String version);
+    List<String> getCurrentServerListByVersion(String version) throws KeeperException, InterruptedException;
 
-    List<String> getCurrentServerListByApiVersion(String api, String version);
+    List<String> getCurrentServerListByApiVersion(String api, String version) throws KeeperException, InterruptedException;
 
-    List<String> getCurrentServerListByApiVersionRegion(String api, String version, String region);
+    List<String> getCurrentServerListByApiVersionCategory(String api, String version, String category) throws KeeperException, InterruptedException;
 }
